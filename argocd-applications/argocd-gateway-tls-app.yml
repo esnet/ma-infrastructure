@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway-tls
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local
+
+  # Use 'sources' (plural) instead of 'source' for multiple repos
+  sources:
+    # First source: Your Helm chart
+    - repoURL: https://github.com/esnet/ma-helm-charts.git
+      targetRevision: main ## set to tag normally
+      path: charts/gateway-tls
+      helm:
+        valueFiles:
+          # Reference values from the second source using $values prefix
+          - $values/arcgocd-config/arcgocd/prod.yaml
+
+    # Second source: Your values repo (ArgoCD application repo)
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+
+  destination:
+    server: https://136.115.157.46
+    namespace: dashboard
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
