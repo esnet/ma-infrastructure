@@ -1,0 +1,44 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=true
+    esnet.app_name: victoriametrics
+spec:
+  project: stardust-development-464714
+  source:
+    repoURL: https://charts.external-secrets.io
+    targetRevision: v0.20.3
+    chart: external-secrets
+  destination:
+    server: https://35.192.48.101
+    namespace: secrets
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sealed-secrets
+  namespace: argocd
+spec:
+  project: stardust-development-464714
+  source:
+    repoURL: https://bitnami-labs.github.io/sealed-secrets
+    targetRevision: 2.17.7
+    chart: sealed-secrets
+  destination:
+    server: https://35.192.48.101
+    namespace: sealed-secrets
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true

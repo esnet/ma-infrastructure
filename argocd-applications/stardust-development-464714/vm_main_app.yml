@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-main
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    esnet.app_name: victoriametrics
+spec:
+  project: stardust-development-464714
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: vm-main-victoria-metrics-cluster-vmauth
+      namespace: vm
+      jsonPointers:
+        - /metadata/annotations/cloud.google.com~1neg
+  sources:
+    - repoURL: https://victoriametrics.github.io/helm-charts/
+      targetRevision: 0.29.1
+      chart: victoria-metrics-cluster
+      helm:
+        valueFiles:
+          - $values/argocd-values/stardust-development-464714/vm_values.yml
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+      # Raw manifests (including HTTPRoute)
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      path: raw/vm/config
+  destination:
+    server: https://35.192.48.101
+    namespace: vm
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

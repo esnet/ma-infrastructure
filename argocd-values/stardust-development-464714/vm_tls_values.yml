@@ -1,8 +1,10 @@
-namespace: argocd
+namespace: vm
 createNamespace: false
 
 domains:
-  - 34.111.216.1.nip.io
+  - 34.110.238.189.nip.io
+envoy:
+  enabled: false
 
 gateway:
   enabled: true
@@ -11,17 +13,15 @@ gateway:
   className: gke-l7-global-external-managed
   ipv4:
     enabled: true
-    address: argocd-ipv4
+    address: vm-prod
     address_type: NamedAddress
   ipv6:
     enabled: false
-    address: argocd-ipv6
-    address_type: NamedAddress
   routes:
     - name: http
       port: 80
       protocol: HTTP
-    - name: https
+    - name: https-vm
       port: 443
       protocol: HTTPS
       use_tls: true
@@ -29,7 +29,7 @@ gateway:
       include_cert: true
 
 certificate:
-  name: argocd-server-tls
+  name: vm-server-tls
   issuer: letsencrypt-prod
   staging: false
   use_gateway: true
@@ -37,12 +37,3 @@ certificate:
 tlsPolicy:
   enabled: true
   name: gke-gateway-ssl-policy
-# cert-manager:
-#   enabled: true
-#   namespace: cert-manager
-#   crds:
-#     # This option decides if the CRDs should be installed
-#     # as part of the Helm installation.
-#     enabled: true
-#   config:
-#     enableGatewayAPI: true

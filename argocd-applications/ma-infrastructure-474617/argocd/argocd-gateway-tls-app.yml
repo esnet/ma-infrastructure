@@ -17,7 +17,7 @@ spec:
       helm:
         valueFiles:
           # Reference values from the second source using $values prefix
-          - $values/arcgocd-config/arcgocd/prod.yaml
+          - $values/argocd-values/ma-infrastructure-474617/argocd_tls_values.yml
 
     # Second source: Your values repo (ArgoCD application repo)
     - repoURL: https://github.com/esnet/ma-infrastructure.git

@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=true
+    esnet.app_name: victoriametrics
+spec:
+  project: stardust-development-464714
+  sources:
+    - repoURL: https://charts.jetstack.io
+      targetRevision: v1.19.1
+      chart: cert-manager
+      helm:
+        valueFiles:
+          - $values/argocd-values/defaults/cert_manager.yml
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+  destination:
+    server: https://35.192.48.101
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true

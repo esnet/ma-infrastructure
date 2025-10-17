@@ -1,0 +1,146 @@
+vmauth:
+  enabled: true
+  replicaCount: 2
+  configSecretName: "vmauth-config"
+  config: {}
+
+  service:
+    type: ClusterIP
+    port: 8427
+    annotations:
+      cloud.google.com/neg: '{"ingress": true}'
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+vmsingle:
+  enabled: false
+
+vmagent:
+  enabled: false # Disable scraping agent (backend only)
+
+vmalert:
+  enabled: false # Disable alerting (backend only)
+
+grafana:
+  enabled: false # Disable UI (backend only)
+
+# VMStorage - handles data persistence
+vmstorage:
+  enabled: true
+  replicaCount: 3
+  retentionPeriod: 3 # months
+
+  persistentVolume:
+    enabled: true
+    storageClass: "" # use default
+    size: 1000Gi
+
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 2Gi
+
+  # Additional flags
+  extraArgs:
+    envflag.enable: "true"
+    envflag.prefix: VM_
+    loggerFormat: json
+    dedup.minScrapeInterval: 30s
+
+# VMInsert - handles data ingestion
+vminsert:
+  enabled: true
+  replicaCount: 2
+  replicationFactor: 2
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+  # Horizontal Pod Autoscaler
+  horizontalPodAutoscaler:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+      - type: Resource
+        resource:
+          name: memory
+          target:
+            type: Utilization
+            averageUtilization: 80
+
+  service:
+    type: ClusterIP
+    servicePort: 8480
+
+# VMSelect - handles queries
+vmselect:
+  enabled: true
+  replicaCount: 2
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+  # Cache configuration
+  cacheMountPath: /select-cache
+
+  # Horizontal Pod Autoscaler
+  horizontalPodAutoscaler:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+      - type: Resource
+        resource:
+          name: memory
+          target:
+            type: Utilization
+            averageUtilization: 80
+
+  service:
+    type: ClusterIP
+    servicePort: 8481
+
+  # Additional flags
+  extraArgs:
+    envflag.enable: "true"
+    envflag.prefix: VM_
+    loggerFormat: json
+    dedup.minScrapeInterval: 30s
+    search.maxQueryDuration: 60s
+
+# Service Account
+serviceAccount:
+  create: true
+  automountToken: true

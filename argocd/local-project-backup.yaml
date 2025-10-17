@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  creationTimestamp: "2025-10-17T22:30:59Z"
+  generation: 3
+  name: stardust-development-464714
+  namespace: argocd
+  resourceVersion: "1760740276249007024"
+  uid: 5d8bbcca-6a1b-432b-b656-9e2f210b65f9
+spec:
+  description: Stardust Development
+  destinations:
+  - name: '*'
+    namespace: '*'
+    server: '*'
+  sourceRepos:
+  - '*'
+status: {}

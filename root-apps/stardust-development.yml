@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: all-apps
+  namespace: argocd
+spec:
+  project: stardust-development-464714
+  source:
+    repoURL: "https://github.com/esnet/ma-infrastructure.git"
+    targetRevision: feature/testing
+    path: "argocd-applications/stardust-development-464714"
+  destination:
+    server: https://kubernetes.default.svc # ArgoCD cluster
+    namespace: argocd
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

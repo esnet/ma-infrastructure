@@ -1,0 +1,38 @@
+namespace: clickhouse
+envoy:
+  enabled: true
+  namespace: envoy-gateway-system
+  createNamespace: true
+
+gateway:
+  className: envoy
+  ipv4:
+    address: 34.111.67.6
+  routes:
+    - name: clickhouse-secure
+      port: 9440
+      mode: Passthrough
+      protocol: TLS
+      use_tls: true
+      include_cert: false
+    - name: http
+      port: 80
+      protocol: HTTP
+    - name: ssl-validation
+      port: 8443
+      protocol: TLS
+      use_tls: true
+      mode: Passthrough
+      include_cert: false
+    - name: clickhouse-https
+      port: 443
+      protocol: HTTPS
+      use_tls: true
+      mode: Terminate
+      include_cert: true
+
+domains:
+  - 34.111.67.6.nip.io
+
+tlsPolicy:
+  enabled: false

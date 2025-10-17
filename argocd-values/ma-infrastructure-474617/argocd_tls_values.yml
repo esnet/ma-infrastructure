@@ -1,0 +1,41 @@
+namespace: argocd
+createNamespace: false
+
+domains:
+  - argo.gc1.prod.stardust.es.net
+envoy:
+  enabled: false
+
+gateway:
+  enabled: true
+  name: external-http
+  namespace_policy: All
+  className: gke-l7-global-external-managed
+  ipv4:
+    enabled: true
+    address: argocd-ipv4
+    address_type: NamedAddress
+  ipv6:
+    enabled: true
+    address: argocd-ipv6
+    address_type: NamedAddress
+  routes:
+    - name: http
+      port: 80
+      protocol: HTTP
+    - name: https
+      port: 443
+      protocol: HTTPS
+      use_tls: true
+      mode: Terminate
+      include_cert: true
+
+certificate:
+  name: argocd-server-tls
+  issuer: letsencrypt-prod
+  staging: false
+  use_gateway: true
+
+tlsPolicy:
+  enabled: true
+  name: gke-gateway-ssl-policy

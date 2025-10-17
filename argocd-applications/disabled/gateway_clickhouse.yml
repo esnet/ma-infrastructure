@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway-clickhouse
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+spec:
+  project: telemetry
+  sources:
+    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+      targetRevision: 0.1.2
+      chart: gateway-tls
+      helm:
+        valueFiles:
+          - $values/argocd-values/development-464714/clickhouse_values.yml
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+  destination:
+    server: https://35.232.70.154
+    namespace: clickhouse
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true

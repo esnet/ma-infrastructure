@@ -1,0 +1,20 @@
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: vmauth-healthcheck
+  namespace: vm
+spec:
+  default:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 8427
+        requestPath: /health
+  targetRef:
+    group: ""
+    kind: Service
+    name: vm-main-victoria-metrics-cluster-vmauth

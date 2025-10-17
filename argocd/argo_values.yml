@@ -1,0 +1,11 @@
+server:
+  extraArgs:
+    - --insecure
+  rbacConfig:
+    policy.default: role:readonly
+    policy.matchMode: glob
+    scopes: "[groups]"
+    policy.csv: |
+      p, role:admin, *, *, *, allow
+      p, role:admin, exec, create, */*, allow
+      g, admin, role:admin

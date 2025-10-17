@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=true
+    esnet.app_name: victoriametrics
+spec:
+  project: stardust-development-464714
+  sources:
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+
+    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+      targetRevision: 0.1.2
+      chart: gateway-tls
+      helm:
+        valueFiles:
+          - $values/argocd-values/stardust-development-464714/vm_tls_values.yml
+      # Raw manifests (including HTTPRoute)
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      path: raw/vm/route
+
+  destination:
+    server: https://35.192.48.101
+    namespace: vm
+  syncPolicy:
+    automated:
+      enabled: true
