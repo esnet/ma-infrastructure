@@ -1,8 +1,11 @@
 namespace: clickhouse
 envoy:
+  createNamespace: false
   enabled: true
   namespace: envoy-gateway-system
-  createNamespace: true
+
+domains:
+  - 34.111.67.6.nip.io
 
 gateway:
   className: envoy
@@ -30,9 +33,6 @@ gateway:
       use_tls: true
       mode: Terminate
       include_cert: true
-
-domains:
-  - 34.111.67.6.nip.io
 
 tlsPolicy:
   enabled: false

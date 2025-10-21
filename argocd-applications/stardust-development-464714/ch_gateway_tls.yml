@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-ch1-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    esnet.app_name: otel_ch1
+spec:
+  project: stardust-development-464714
+  sources:
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+
+    # Chart 1: Envoy Gateway (infrastructure)
+    - repoURL: oci://docker.io/envoyproxy
+      targetRevision: v1.5.4
+      chart: gateway-helm # ← Add this
+
+    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+      targetRevision: 0.1.3
+      chart: gateway-tls
+      helm:
+        valueFiles:
+          - $values/argocd-values/stardust-development-464714/ch_tls_values.yml
+
+  destination:
+    server: https://104.197.235.95
+    namespace: clickhouse
+  syncPolicy:
+    automated:
+      enabled: true
