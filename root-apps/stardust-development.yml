@@ -5,10 +5,13 @@ metadata:
   namespace: argocd
 spec:
   project: stardust-development-464714
-  source:
-    repoURL: "https://github.com/esnet/ma-infrastructure.git"
-    targetRevision: feature/testing
-    path: "argocd-applications/stardust-development-464714"
+  sources:
+    - repoURL: "https://github.com/esnet/ma-infrastructure.git"
+      targetRevision: feature/testing
+      path: "argocd-applicationsets/stardust-development-464714"
+    - repoURL: "https://github.com/esnet/ma-infrastructure.git"
+      targetRevision: feature/testing
+      path: "argocd-applications/stardust-development-464714"
   destination:
     server: https://kubernetes.default.svc # ArgoCD cluster
     namespace: argocd
