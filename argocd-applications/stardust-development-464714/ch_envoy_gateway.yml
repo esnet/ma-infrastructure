@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-ch1-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    esnet.app_name: otel_ch1
+spec:
+  project: stardust-development-464714
+  source:
+    repoURL: docker.io
+    chart: envoyproxy/gateway-helm
+    targetRevision: v1.5.4
+    # targetRevision: v0.0.0-latest
+    ## Alternative: kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/download/v1.5.4/install.yaml
+
+  destination:
+    server: https://104.197.235.95
+    namespace: envoy-gateway-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    # retry:
+    #   limit: 5
+    #   backoff:
+    #     duration: 5s
+    #     factor: 2
+    #     maxDuration: 3m
