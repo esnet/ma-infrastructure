@@ -10,15 +10,15 @@ metadata:
 spec:
   project: stardust-development-464714
   sources:
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
     - repoURL: https://charts.jetstack.io
       targetRevision: v1.19.1
       chart: cert-manager
       helm:
         valueFiles:
           - $values/argocd-values/defaults/cert_manager.yml
-    - repoURL: https://github.com/esnet/ma-infrastructure.git
-      targetRevision: feature/testing
-      ref: values
   destination:
     server: https://35.192.48.101
     namespace: cert-manager
