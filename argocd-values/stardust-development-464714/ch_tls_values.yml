@@ -5,12 +5,12 @@ envoy:
   namespace: envoy-gateway-system
 
 domains:
-  - 34.111.67.6.nip.io
+  - 34.172.208.101.nip.io
 
 gateway:
   className: envoy
   ipv4:
-    address: 34.111.67.6
+    address: 34.172.208.101
   routes:
     - name: clickhouse-secure
       port: 9440
