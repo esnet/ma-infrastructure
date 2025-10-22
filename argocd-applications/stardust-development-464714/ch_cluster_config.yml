@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-ch1-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    esnet.app_name: otel_ch1
+spec:
+  project: stardust-development-464714
+  sources:
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: feature/testing
+      ref: values
+
+    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+      targetRevision: 0.1.0
+      chart: clickhouse
+      helm:
+        valueFiles:
+          - $values/argocd-values/stardust-development-464714/ch_tls_values.yml
+  destination:
+    server: https://104.197.235.95
+    namespace: clickhouse
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ServerSideApply=true
