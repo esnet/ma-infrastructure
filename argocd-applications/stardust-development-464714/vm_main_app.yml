@@ -29,7 +29,7 @@ spec:
       # Raw manifests (including HTTPRoute)
     - repoURL: https://github.com/esnet/ma-infrastructure.git
       targetRevision: feature/testing
-      path: raw/vm/config
+      path: manifest/vm/config
   destination:
     server: https://35.192.48.101
     namespace: vm
