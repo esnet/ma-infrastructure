@@ -21,9 +21,14 @@ spec:
         targetRevision: v1.19.1
         helm:
           releaseName: cert-manager
-          parameters:
-            - name: installCRDs
-              value: "true"
+          values: |
+            crds:
+              enabled: true
+              keep: true
+
+            config:
+              enableGatewayAPI: true
+
       destination:
         server: "{{server}}"
         namespace: cert-manager
