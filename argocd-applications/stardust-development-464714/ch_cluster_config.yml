@@ -15,11 +15,11 @@ spec:
       ref: values
 
     - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
-      targetRevision: 0.1.0
+      targetRevision: 0.1.1
       chart: clickhouse
       helm:
         valueFiles:
-          - $values/argocd-values/stardust-development-464714/ch_tls_values.yml
+          - $values/argocd-values/stardust-development-464714/ch_main_values.yml
       # Raw manifests (including HTTPRoute)
     - repoURL: https://github.com/esnet/ma-infrastructure.git
       targetRevision: feature/testing
