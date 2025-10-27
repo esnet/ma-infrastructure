@@ -1,0 +1,498 @@
+namespaceOverride: "monitoring"
+
+# Helm values for OpenTelemetry Collector
+# Configured as Gateway mode with LoadBalancer and ClickHouse export
+
+# ====================================================================
+# DEPLOYMENT MODE
+# ====================================================================
+mode: deployment # Use 'deployment' for gateway mode with load balancing
+
+# ====================================================================
+# REPLICAS & SCALING
+# ====================================================================
+replicaCount: 2
+
+# Horizontal Pod Autoscaler (optional)
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# ====================================================================
+# SERVICE CONFIGURATION
+# ====================================================================
+service:
+  enabled: true
+  type: LoadBalancer # Use LoadBalancer for external access
+
+  # Optional: Specify LoadBalancer IP (cloud provider specific)
+  # loadBalancerIP: "10.0.0.100"
+
+  # Optional: LoadBalancer source ranges (security)
+  # loadBalancerSourceRanges:
+  # - "10.0.0.0/8"
+  # - "172.16.0.0/12"
+
+  annotations:
+    # AWS ELB annotations (if using AWS)
+    # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+    # GCP annotations (if using GCP)
+    # cloud.google.com/load-balancer-type: "Internal"
+
+    # Azure annotations (if using Azure)
+    # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+  # Internal traffic policy for better load distribution
+  internalTrafficPolicy: Local
+
+# ====================================================================
+# PORTS CONFIGURATION
+# ====================================================================
+ports:
+  # OTLP gRPC
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+
+  # OTLP HTTP
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+
+# ====================================================================
+# RESOURCES
+# ====================================================================
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# ====================================================================
+# OTEL COLLECTOR CONFIGURATION
+# ====================================================================
+config:
+  receivers:
+    # OTLP receivers
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+    # Self-monitoring
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: "otel-collector"
+            scrape_interval: 30s
+            static_configs:
+              - targets: ["localhost:8888"]
+
+  processors:
+    # Batch processor for efficiency
+    batch:
+      timeout: 10s
+      send_batch_size: 10000
+      send_batch_max_size: 11000
+
+    # Memory limiter to prevent OOM
+    memory_limiter:
+      check_interval: 1s
+      limit_percentage: 75
+      spike_limit_percentage: 25
+
+    # Add resource attributes
+    resource:
+      attributes:
+        - key: cluster.name
+          value: my-k8s-cluster
+          action: upsert
+        - key: deployment.environment
+          value: production
+          action: upsert
+
+    # K8s attributes processor (adds pod/namespace info)
+    k8sattributes:
+      auth_type: "serviceAccount"
+      passthrough: false
+      extract:
+        metadata:
+          - k8s.namespace.name
+          - k8s.deployment.name
+          - k8s.statefulset.name
+          - k8s.daemonset.name
+          - k8s.cronjob.name
+          - k8s.job.name
+          - k8s.node.name
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.pod.start_time
+      pod_association:
+        - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+        - sources:
+            - from: resource_attribute
+              name: k8s.pod.uid
+        - sources:
+            - from: connection
+
+    # Optional: Filter processor to drop unwanted metrics
+    filter/drop:
+      error_mode: ignore
+      metrics:
+        metric:
+        # Example: drop high-cardinality metrics
+        # - 'type == METRIC_DATA_TYPE_HISTOGRAM and name == "http_request_duration_seconds"'
+
+    # Optional: Transform processor for metric manipulation
+    # transform:
+    #   metric_statements:
+    #   - context: metric
+    #     statements:
+    #     - set(description, "new description") where name == "metric_name"
+
+  exporters:
+    # ClickHouse exporter
+    clickhouse:
+      endpoint: tcp://clickhouse.monitoring.svc.cluster.local:9000?dial_timeout=10s&compress=lz4
+      database: metrics
+      ttl_days: 30
+      logs_table_name: otel_logs
+      traces_table_name: otel_traces
+      metrics_table_name: otel_metrics
+      timeout: 10s
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
+      sending_queue:
+        enabled: true
+        num_consumers: 20
+        queue_size: 10000
+      # Authentication (if needed)
+      # username: default
+      # password: ${env:CLICKHOUSE_PASSWORD}
+
+    # Optional: ClickHouse cluster configuration for sharding
+    # clickhouse/cluster:
+    #   endpoint: tcp://clickhouse-0.clickhouse.monitoring.svc.cluster.local:9000,tcp://clickhouse-1.clickhouse.monitoring.svc.cluster.local:9000?dial_timeout=10s&compress=lz4
+    #   database: metrics
+    #   ttl_days: 30
+
+    # Debug logging exporter
+    logging:
+      loglevel: info
+      sampling_initial: 5
+      sampling_thereafter: 200
+
+    # Optional: Prometheus exporter for querying
+    # prometheus:
+    #   endpoint: "0.0.0.0:8889"
+    #   namespace: otel
+    #   const_labels:
+    #     cluster: my-k8s-cluster
+
+  extensions:
+    # Health check
+    health_check:
+      endpoint: 0.0.0.0:13133
+
+    # Performance profiling
+    pprof:
+      endpoint: 0.0.0.0:1777
+
+    # zPages for debugging
+    zpages:
+      endpoint: 0.0.0.0:55679
+
+  service:
+    extensions:
+      - health_check
+      - pprof
+      - zpages
+
+    pipelines:
+      # Metrics from Prometheus remote write
+      metrics/prometheus:
+        receivers:
+          - prometheusreceiveremotewrite
+        processors:
+          - memory_limiter
+          - k8sattributes
+          - resource
+          - batch
+        exporters:
+          - clickhouse
+          - logging
+
+      # Metrics from OTLP
+      metrics/otlp:
+        receivers:
+          - otlp
+        processors:
+          - memory_limiter
+          - k8sattributes
+          - resource
+          - batch
+        exporters:
+          - clickhouse
+          - logging
+
+      # Self-monitoring metrics
+      metrics/internal:
+        receivers:
+          - prometheus
+        processors:
+          - memory_limiter
+          - resource
+          - batch
+        exporters:
+          - clickhouse
+
+      # Traces pipeline (if needed)
+      traces:
+        receivers:
+          - otlp
+        processors:
+          - memory_limiter
+          - k8sattributes
+          - resource
+          - batch
+        exporters:
+          - clickhouse
+          - logging
+
+      # Logs pipeline (if needed)
+      logs:
+        receivers:
+          - otlp
+        processors:
+          - memory_limiter
+          - k8sattributes
+          - resource
+          - batch
+        exporters:
+          - clickhouse
+          - logging
+
+    telemetry:
+      logs:
+        level: info
+      metrics:
+        address: 0.0.0.0:8888
+
+# ====================================================================
+# RBAC
+# ====================================================================
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+clusterRole:
+  create: true
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - events
+        - namespaces
+        - namespaces/status
+        - nodes
+        - nodes/spec
+        - pods
+        - pods/status
+        - replicationcontrollers
+        - replicationcontrollers/status
+        - resourcequotas
+        - services
+      verbs:
+        - get
+        - list
+        - watch
+    - apiGroups:
+        - apps
+      resources:
+        - daemonsets
+        - deployments
+        - replicasets
+        - statefulsets
+      verbs:
+        - get
+        - list
+        - watch
+    - apiGroups:
+        - extensions
+      resources:
+        - daemonsets
+        - deployments
+        - replicasets
+      verbs:
+        - get
+        - list
+        - watch
+    - apiGroups:
+        - batch
+      resources:
+        - jobs
+        - cronjobs
+      verbs:
+        - get
+        - list
+        - watch
+    - apiGroups:
+        - autoscaling
+      resources:
+        - horizontalpodautoscalers
+      verbs:
+        - get
+        - list
+        - watch
+
+# ====================================================================
+# POD CONFIGURATION
+# ====================================================================
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
+
+podLabels:
+  app: otel-collector
+  component: gateway
+
+# Security context
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 3000
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# ====================================================================
+# PROBES
+# ====================================================================
+livenessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ====================================================================
+# AFFINITY & TOLERATIONS
+# ====================================================================
+# Spread pods across nodes for HA
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - opentelemetry-collector
+          topologyKey: kubernetes.io/hostname
+
+# Node selector (optional)
+nodeSelector: {}
+  # kubernetes.io/os: linux
+
+# Tolerations (optional)
+tolerations: []
+  # - key: "monitoring"
+  #   operator: "Equal"
+  #   value: "true"
+  #   effect: "NoSchedule"
+
+# ====================================================================
+# PERSISTENCE (for buffering during outages)
+# ====================================================================
+# Optional: Enable persistence for queue storage
+# persistence:
+#   enabled: true
+#   storageClass: "standard"
+#   accessModes:
+#   - ReadWriteOnce
+#   size: 10Gi
+
+# ====================================================================
+# EXTRA ENVIRONMENT VARIABLES
+# ====================================================================
+# For secrets like ClickHouse password
+extraEnvs:
+  # Example: ClickHouse password from secret
+  # - name: CLICKHOUSE_PASSWORD
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: clickhouse-credentials
+  #       key: password
+  - name: GOMEMLIMIT
+    value: "3600MiB"
+
+# ====================================================================
+# MONITORING
+# ====================================================================
+# ServiceMonitor for Prometheus Operator
+serviceMonitor:
+  enabled: true
+  metricsEndpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+
+# PodMonitor (alternative to ServiceMonitor)
+podMonitor:
+  enabled: false
+
+# ====================================================================
+# NETWORK POLICY (optional)
+# ====================================================================
+networkPolicy:
+  enabled: false
+  # ingress:
+  # - from:
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         name: prometheus
+  #   ports:
+  #   - protocol: TCP
+  #     port: 9009
+# ====================================================================
+# PRIORITY CLASS (optional)
+# ====================================================================
+# priorityClassName: "high-priority"
