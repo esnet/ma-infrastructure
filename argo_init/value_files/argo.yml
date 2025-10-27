@@ -1,0 +1,19 @@
+global:
+  domain: argo.gc1.mgt.stardust.es.net
+
+server:
+  extraArgs:
+    - --insecure
+  rbacConfig:
+    policy.default: role:readonly
+    policy.matchMode: glob
+    scopes: "[groups]"
+    policy.csv: |
+      p, role:admin, *, *, *, allow
+      p, role:admin, exec, create, */*, allow
+      g, admin, role:admin
+
+configs:
+  params:
+    server.insecure: "true"
+    application.namespaces: "argocd,stardust-development-464714,ma-infrastructure-474617"
