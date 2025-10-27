@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: otel-ch1-config
+  name: otel-ch1-gateway-tls
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-options: Delete=false
@@ -15,20 +15,18 @@ spec:
       ref: values
 
     - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
-      targetRevision: 0.1.1
-      chart: clickhouse
+      targetRevision: 0.1.3
+      chart: gateway-tls
       helm:
         valueFiles:
-          - $values/argocd-values/stardust-development-464714/ch_main_values.yml
-      # Raw manifests (including HTTPRoute)
-    - repoURL: https://github.com/esnet/ma-infrastructure.git
-      targetRevision: feature/testing
-      path: manifest/clickhouse
+          - $values/argocd-values/stardust-development-464714/ch_tls_values.yml
+
   destination:
-    server: https://104.197.235.95
+    server: https://104.197.235.965
     namespace: clickhouse
   syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      # - ServerSideApply=true
     automated:
       enabled: true
-    syncOptions:
-      - ServerSideApply=true
