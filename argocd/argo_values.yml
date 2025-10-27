@@ -9,3 +9,8 @@ server:
       p, role:admin, *, *, *, allow
       p, role:admin, exec, create, */*, allow
       g, admin, role:admin
+
+configs:
+  params:
+    server.insecure: "true"
+    application.namespaces: "argocd, stardust-development-464714, ma-infrastructure-474617"

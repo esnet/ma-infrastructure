@@ -4,3 +4,5 @@ crds:
 
 config:
   enableGatewayAPI: true
+
+namespace: cert-manager

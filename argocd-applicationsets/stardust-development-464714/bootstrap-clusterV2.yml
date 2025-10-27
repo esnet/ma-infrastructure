@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bootstrap
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            bootstrap: "true"
+            version: "v2"
+  template:
+    metadata:
+      name: "{{name}}-cert-manager"
+    spec:
+      project: stardust-development-464714
+      sources:
+        # Create all required namespaces
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: feature/testing
+          path: manifest/bootstrap
+        # Values file
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: feature/testing
+          ref: values
+        # Cert Manager
+        - repoURL: https://charts.jetstack.io
+          chart: cert-manager
+          targetRevision: v1.19.1
+          helm:
+            valueFiles:
+              - $values/argocd-values/defaults/cert_manager.yml
+        ## Secrets
+        - repoURL: https://bitnami-labs.github.io/sealed-secrets
+          chart: sealed-secrets
+          targetRevision: 2.17.7
+          helm:
+            valueFiles:
+              - $values/argocd-values/defaults/sealed-secrets.yml
+            releaseName: sealed-secrets
+
+      destination:
+        server: "{{server}}"
+        namespace: cert-manager
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
