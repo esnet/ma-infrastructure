@@ -13,6 +13,4 @@ function setup_repos
 setup_repos
 
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.19.0 --set  crds.enabled=true --set config.enableGatewayAPI=true --wait
-helm install external-secrets external-secrets/external-secrets -n secrets --version v0.20.3  --create-namespace --wait
 helm install sealed-secrets secrets/sealed-secrets -n sealed-secrets --version 2.17.7 --create-namespace --wait
-#helm install -n monitoring prometheus oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --create-namespace

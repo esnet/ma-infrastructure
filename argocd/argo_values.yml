@@ -1,6 +1,4 @@
 server:
-  extraArgs:
-    - --insecure
   rbacConfig:
     policy.default: role:readonly
     policy.matchMode: glob

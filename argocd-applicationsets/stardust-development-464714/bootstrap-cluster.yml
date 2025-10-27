@@ -1,30 +1,60 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cert-manager
+  name: init
   namespace: argocd
 spec:
   generators:
     - clusters:
         selector:
           matchLabels:
-            setEnabled: "true"
-            install-cert-manager: "true"
+            bootstrap: "true"
+            version: "1.0"
   template:
     metadata:
       name: "{{name}}-cert-manager"
     spec:
       project: stardust-development-464714
       sources:
+        # Create all required namespaces
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: feature/testing
+          path: manifest/bootstrap
+        # Values file
         - repoURL: https://github.com/esnet/ma-infrastructure.git
           targetRevision: feature/testing
           ref: values
+        # Cert Manager
         - repoURL: https://charts.jetstack.io
           chart: cert-manager
           targetRevision: v1.19.1
           helm:
             valueFiles:
               - $values/argocd-values/defaults/cert_manager.yml
+        ## Secrets
+        - repoURL: https://bitnami-labs.github.io/sealed-secrets
+          chart: sealed-secrets
+          targetRevision: 2.17.7
+          helm:
+            valueFiles:
+              - $values/argocd-values/defaults/sealed-secrets.yml
+            releaseName: sealed-secrets
+        ## Prometheus
+        # - repoURL: https://prometheus-community.github.io/helm-charts
+        #   chart: kube-prometheus-stack
+        #   targetRevision: 79.0.0
+        #   helm:
+        #     valueFiles:
+        #       - $values/argocd-values/defaults/prometheus.yml
+        #     releaseName: prometheus-stack
+        # - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+        #   chart: collector
+        #   targetRevision: 0.138.0
+        #   helm:
+        #     valueFiles:
+        #       - $values/argocd-values/defaults/prometheus.yml
+        #     releaseName: collector
+
       destination:
         server: "{{server}}"
         namespace: cert-manager
@@ -32,38 +62,3 @@ spec:
         automated:
           prune: true
           selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: sealed-secrets
-  namespace: argocd
-spec:
-  generators:
-    - clusters:
-        selector:
-          matchLabels:
-            setEnabled: "true"
-            install-sealed-secrets: "true"
-  template:
-    metadata:
-      name: "{{name}}-sealed-secrets"
-    spec:
-      project: stardust-development-464714
-      source:
-        repoURL: https://bitnami-labs.github.io/sealed-secrets
-        chart: sealed-secrets
-        targetRevision: 2.17.7
-        helm:
-          releaseName: sealed-secrets
-      destination:
-        server: "{{server}}"
-        namespace: sealed-secrets
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
