@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: bootstrap
+  name: init
   namespace: argocd
 spec:
   generators:
@@ -39,6 +39,14 @@ spec:
             valueFiles:
               - $values/argocd-values/defaults/sealed-secrets.yml
             releaseName: sealed-secrets
+        ## Prometheus
+        - repoURL: https://prometheus-community.github.io/helm-charts
+          chart: kube-prometheus-stack
+          targetRevision: 79.0.0
+          helm:
+            valueFiles:
+              - $values/argocd-values/defaults/prometheus.yml
+            releaseName: prometheus-stack
 
       destination:
         server: "{{server}}"
