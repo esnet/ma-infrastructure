@@ -40,13 +40,20 @@ spec:
               - $values/argocd-values/defaults/sealed-secrets.yml
             releaseName: sealed-secrets
         ## Prometheus
-        - repoURL: https://prometheus-community.github.io/helm-charts
-          chart: kube-prometheus-stack
-          targetRevision: 79.0.0
-          helm:
-            valueFiles:
-              - $values/argocd-values/defaults/prometheus.yml
-            releaseName: prometheus-stack
+        # - repoURL: https://prometheus-community.github.io/helm-charts
+        #   chart: kube-prometheus-stack
+        #   targetRevision: 79.0.0
+        #   helm:
+        #     valueFiles:
+        #       - $values/argocd-values/defaults/prometheus.yml
+        #     releaseName: prometheus-stack
+        # - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+        #   chart: collector
+        #   targetRevision: 0.138.0
+        #   helm:
+        #     valueFiles:
+        #       - $values/argocd-values/defaults/prometheus.yml
+        #     releaseName: collector
 
       destination:
         server: "{{server}}"
