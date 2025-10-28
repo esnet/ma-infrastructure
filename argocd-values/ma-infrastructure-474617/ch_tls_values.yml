@@ -1,0 +1,38 @@
+namespace: clickhouse
+envoy:
+  createNamespace: false
+  enabled: true
+  namespace: envoy-gateway-system
+
+domains:
+  - ch.gc1.mgt.stardust.es.net
+
+gateway:
+  className: envoy
+  ipv4:
+    address: 35.194.7.55
+  routes:
+    - name: clickhouse-secure
+      port: 9440
+      mode: Passthrough
+      protocol: TLS
+      use_tls: true
+      include_cert: false
+    - name: http
+      port: 80
+      protocol: HTTP
+    - name: ssl-validation
+      port: 8443
+      protocol: TLS
+      use_tls: true
+      mode: Passthrough
+      include_cert: false
+    - name: clickhouse-https
+      port: 443
+      protocol: HTTPS
+      use_tls: true
+      mode: Terminate
+      include_cert: true
+
+tlsPolicy:
+  enabled: false

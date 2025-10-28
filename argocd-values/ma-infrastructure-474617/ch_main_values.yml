@@ -1,0 +1,13 @@
+namespace: clickhouse
+
+config:
+  tls_enabled: true
+  tls_cert_secret: tls-cert
+  disk_volume_size: 1000Gi
+  log_volume_size: 10Gi
+  clickhouse_version: 25.9
+  ch:
+    shardCount: 1
+    replicasCount: 2
+  domains:
+    - ch.gc1.mgt.stardust.es.net
