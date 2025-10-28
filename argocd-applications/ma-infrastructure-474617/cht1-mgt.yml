@@ -41,7 +41,7 @@ spec:
 
   destination:
     server: https://35.239.23.41
-    namespace: clickhouse
+    namespace: envoy-gateway-system
   syncPolicy:
     automated:
       enabled: true
