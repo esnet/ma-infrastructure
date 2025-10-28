@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: all-ma-infrastructure
+  namespace: ma-infrastructure-474617
+spec:
+  project: ma-infrastructure-474617
+  sources:
+    ## Generic bootstrap
+    - repoURL: "https://github.com/esnet/ma-infrastructure.git"
+      targetRevision: main
+      path: "argocd-applicationsets/all"
+    ## ma-infrastructure
+    - repoURL: "https://github.com/esnet/ma-infrastructure.git"
+      targetRevision: main
+      path: "argocd-applicationsets/ma-infrastructure-474617"
+    - repoURL: "https://github.com/esnet/ma-infrastructure.git"
+      targetRevision: main
+      path: "argocd-applications/ma-infrastructure-474617"
+  destination:
+    server: https://kubernetes.default.svc # ArgoCD cluster
+    namespace: ma-infrastructure-474617
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

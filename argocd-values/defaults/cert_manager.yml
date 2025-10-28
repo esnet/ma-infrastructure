@@ -1,0 +1,8 @@
+crds:
+  enabled: true
+  keep: true
+
+config:
+  enableGatewayAPI: true
+
+namespace: cert-manager

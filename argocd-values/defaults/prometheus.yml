@@ -1,0 +1,58 @@
+namespaceOverride: monitoring
+# Helm values for kube-prometheus-stack
+# This configures Prometheus Operator with Prometheus in Agent mode
+
+# ====================================================================
+# PROMETHEUS OPERATOR
+# ====================================================================
+prometheusOperator:
+  enabled: true
+
+  # Resources for the operator itself
+  resources:
+    limits:
+      cpu: 200m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+  # Admission webhooks (optional, can disable for simpler setup)
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true
+
+  # Monitor the operator itself
+  serviceMonitor:
+    enabled: true
+
+prometheus:
+  enabled: false
+  agentMode: true
+  prometheusSpec:
+    # externalLabels:
+    #   cluster: "dev-staging-dashboard"
+    #   project: "esnet-sd-dev"
+    #   environment: "staging"
+    #   region: "us-central1"
+    remoteWrite:
+      - url: http://otel-collector.monitoring.svc.cluster.local:9009/api/v1/write
+        queueConfig:
+          capacity: 10000
+          maxShards: 50
+          minShards: 1
+          maxSamplesPerSend: 5000
+          batchSendDeadline: 5s
+          # Add custom labels to all metrics
+          # - sourceLabels: [__name__]
+          # targetLabel: source
+          # replacement: prometheus-agent
+
+    resources:
+      requests:
+        memory: 200Mi
+        cpu: 100m
+      limits:
+        memory: 1Gi
+        cpu: 500m
