@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-ch1
+  namespace: ma-infrastructure-474617
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    esnet.app_name: otel_ch1
+spec:
+  project: ma-infrastructure-474617
+  sources:
+    ## Values file
+    - repoURL: https://github.com/esnet/ma-infrastructure.git
+      targetRevision: main
+      ref: values
+    ## Cluster
+    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+      targetRevision: 0.1.1
+      chart: clickhouse
+      helm:
+        valueFiles:
+          - $values/argocd-values/ma-infrastructure-474617/ch_main_values.yml
+  destination:
+    server: https://34.121.159.183
+    namespace: envoy-gateway-system
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

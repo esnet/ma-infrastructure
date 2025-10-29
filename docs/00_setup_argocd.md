@@ -43,3 +43,10 @@ Once you have added the cluster review the setting and ensure the setting (sourc
 If you don't have a project already create one:
 
 ./create_project.sh stardust-development-464714
+
+5. Adding a project with bootstrap
+
+
+```sh
+argocd  cluster add gke_ma-infrastructure-474617_us-central1_ch1-otle-mgt --name "ch1-otle-mgt"  --label version="1.0" --label "bootstrap=true" --label "project=ma-infrastructure-474617"
+```

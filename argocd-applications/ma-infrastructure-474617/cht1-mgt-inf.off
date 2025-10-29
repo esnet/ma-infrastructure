@@ -47,17 +47,8 @@ spec:
         parameters:
           - name: "podAnnotations.argocd\\.argoproj\\.io/sync-wave"
             value: "3"
-    - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
-      targetRevision: 0.1.1
-      chart: clickhouse
-      helm:
-        valueFiles:
-          - $values/argocd-values/ma-infrastructure-474617/ch_main_values.yml
-        parameters:
-          - name: "podAnnotations.argocd\\.argoproj\\.io/sync-wave"
-            value: "4"
   destination:
-    server: https://34.58.56.175
+    server: https://34.121.159.183
     namespace: envoy-gateway-system
   syncPolicy:
     automated:
