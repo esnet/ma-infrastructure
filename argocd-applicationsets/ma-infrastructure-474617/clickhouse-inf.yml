@@ -4,6 +4,7 @@ metadata:
   name: ch-inf
   namespace: argocd
 spec:
+  goTemplate: true
   generators:
     - clusters:
         selector:
@@ -28,23 +29,19 @@ spec:
           name: gatewayclasses.gateway.networking.k8s.io # adjust based on which CRD is drifting
           jsonPointers:
             - /metadata/annotations/gateway.networking.k8s.io~1channel
-      project: "{{metadata.labels.project}}"
+      project: "{{.metadata.labels.project}}"
       sources:
         # Create all required namespaces
         - repoURL: https://github.com/esnet/ma-infrastructure.git
           targetRevision: main
           path: manifest/clickhouse
-        #
-        - repoURL: https://github.com/esnet/ma-infrastructure.git
-          targetRevision: main
-          ref: values
         # Adding envoy proxy...
         - repoURL: docker.io
           chart: envoyproxy/gateway-helm
           targetRevision: v1.5.4
 
       destination:
-        server: "{{server}}"
+        server: "{{.server}}" # ← Note the dot prefix
         namespace: cert-manager
       syncPolicy:
         automated:
