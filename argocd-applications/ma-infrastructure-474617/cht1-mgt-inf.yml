@@ -8,6 +8,12 @@ metadata:
     argocd.argoproj.io/sync-options: Delete=false
     esnet.app_name: otel_ch1
 spec:
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: gatewayclasses.gateway.networking.k8s.io # adjust based on which CRD is drifting
+      jsonPointers:
+        - /metadata/annotations/gateway.networking.k8s.io~1channel
   project: ma-infrastructure-474617
   sources:
     # Create all required namespaces
