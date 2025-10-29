@@ -38,9 +38,8 @@ argocd cluster add gke_esnet-sd-dev_us-central1-c_dev-staging-dashboard --name g
 
 Once you have added the cluster review the setting and ensure the setting (source, destination and namespaces espcially)
 
-4. Optional: this might not be needed, but if you have permission issues
+4. Create Project: this might not be needed, but if you have permission issues
 
-```sh
-cd argocd
-./fix_permissions.sh stardust-development-464714
-```
+If you don't have a project already create one:
+
+./create_project.sh stardust-development-464714
