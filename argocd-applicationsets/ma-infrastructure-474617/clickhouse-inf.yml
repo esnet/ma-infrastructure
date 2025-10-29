@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ch-inf
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+                - "otel"
+            - key: esnet/app.environment
+              operator: Exists
+            - key: esnet/app.name
+              operator: In
+              values:
+                - "clickhouse"
+  template:
+    metadata:
+      name: '{{index .metadata.labels "esnet/app.environment"}}-ch-inf'
+    spec:
+      ignoreDifferences:
+        - group: apiextensions.k8s.io
+          kind: CustomResourceDefinition
+          name: gatewayclasses.gateway.networking.k8s.io # adjust based on which CRD is drifting
+          jsonPointers:
+            - /metadata/annotations/gateway.networking.k8s.io~1channel
+      project: "{{metadata.labels.project}}"
+      sources:
+        # Create all required namespaces
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: main
+          path: manifest/clickhouse
+        #
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: main
+          ref: values
+        # Adding envoy proxy...
+        - repoURL: docker.io
+          chart: envoyproxy/gateway-helm
+          targetRevision: v1.5.4
+
+      destination:
+        server: "{{server}}"
+        namespace: cert-manager
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
