@@ -12,7 +12,7 @@ spec:
               operator: In
               values:
                 - "otel"
-            - key: esnet/app.environment
+            - key: environment
               operator: Exists
             - key: app_name
               operator: In
@@ -20,7 +20,7 @@ spec:
                 - "clickhouse"
   template:
     metadata:
-      name: "{{ metadata.labels.app_name }}-ch-inf"
+      name: "{{ metadata.labels.environment }}-ch-inf"
     spec:
       ignoreDifferences:
         - group: apiextensions.k8s.io
@@ -31,23 +31,28 @@ spec:
             - kube-controller-manager
       project: "{{metadata.labels.project}}"
       sources:
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: main
+          ref: values
         # Create all required namespaces
         - repoURL: https://github.com/esnet/ma-infrastructure.git
           targetRevision: main
           path: manifest/clickhouse
         # Adding envoy proxy...
-        # - repoURL: oci://docker.io/envoyproxy
-        #   chart: gateway-helm
-        #   targetRevision: v1.5.4
-        #   helm:
-        #     releaseName: envoy-gateway
+
         # Previous version
         - repoURL: docker.io
           chart: envoyproxy/gateway-helm
           targetRevision: v1.5.4
           helm:
             releaseName: envoy-gateway
-
+        # Setting Up TLS
+        - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+          targetRevision: 0.1.4
+          chart: gateway-tls
+          helm:
+            valueFiles:
+              - $values/argocd-values/ma-infrastructure-474617/clickhouse/{{ metadata.labels.environment }}/ch_tls_values.yml
       destination:
         server: "{{server}}"
         namespace: envoy-gateway-system

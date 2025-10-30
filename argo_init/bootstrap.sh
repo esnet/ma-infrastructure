@@ -21,6 +21,7 @@ rules:
   resources:
   - applications
   - applicationsets
+  - appprojects
   verbs:
   - get
   - list
@@ -29,6 +30,31 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - argoproj.io
+  resources:
+  - applications/status
+  - applicationsets/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -42,34 +68,4 @@ subjects:
 - kind: ServiceAccount
   name: argocd-applicationset-controller
   namespace: argocd
-EOF
-echo "The ApplicationSet controller also needs permissions to list Secrets"
-kubectl apply -f - <<EOF
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: argocd-applicationset-controller
-rules:
-- apiGroups:
-  - argoproj.io
-  resources:
-  - applications
-  - applicationsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
 EOF
