@@ -5,6 +5,7 @@ metadata:
   namespace: ma-infrastructure-474617
 spec:
   goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - clusters:
         selector:
@@ -40,6 +41,8 @@ spec:
         - repoURL: docker.io
           chart: envoyproxy/gateway-helm
           targetRevision: v1.5.4
+          helm:
+            releaseName: envoy-gateway
 
       destination:
         server: "{{.server}}"
