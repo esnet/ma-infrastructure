@@ -41,9 +41,9 @@ spec:
             releaseName: sealed-secrets
         ## Secrets
         ## Pre-install CRDs:
-        # - repoURL: https://github.com/external-secrets/external-secrets.git
-        #   targetRevision: v0.20.4
-        #   path: deploy/crds
+        - repoURL: https://github.com/external-secrets/external-secrets.git
+          targetRevision: v0.20.4
+          path: deploy/crds
         ## Install Operator
         - repoURL: https://charts.external-secrets.io
           chart: external-secrets
