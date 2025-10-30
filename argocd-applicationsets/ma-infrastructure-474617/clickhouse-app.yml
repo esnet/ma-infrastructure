@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ch-main
+  namespace: ma-infrastructure-474617
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+                - "otel"
+            - key: environment
+              operator: Exists
+            - key: app_name
+              operator: In
+              values:
+                - "clickhouse"
+            - key: deploy_component
+              operator: In
+              values:
+                - "clickhouse_main"
+  template:
+    metadata:
+      name: "{{ metadata.labels.environment }}-ch-main"
+      annotations:
+        argocd.argoproj.io/sync-wave: "10"
+    spec:
+      project: "{{metadata.labels.project}}"
+      sources:
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: main
+          ref: values
+
+        # Install CH Operator
+        - repoURL: https://helm.altinity.com
+          chart: altinity-clickhouse-operator
+          targetRevision: 0.25.4
+        # Setting Up TLS
+        ## Cluster
+        - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
+          targetRevision: 0.1.3
+          chart: clickhouse
+          helm:
+            valueFiles:
+              - $values/argocd-values/ma-infrastructure-474617/clickhouse/{{ metadata.labels.environment }}/ch_main_values.yml
+      destination:
+        server: "{{server}}"
+        namespace: clickhouse
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
+          - SkipDryRunOnMissingResource=true
+        retry: # Add this entire section
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

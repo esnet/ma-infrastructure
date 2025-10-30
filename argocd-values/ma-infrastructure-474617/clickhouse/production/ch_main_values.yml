@@ -2,7 +2,7 @@ namespace: clickhouse
 
 config:
   tls_enabled: true
-  tls_cert_secret: tls-cert
+  tls_cert_secret: clickhouse-cert
   disk_volume_size: 1000Gi
   log_volume_size: 10Gi
   clickhouse_version: 25.9

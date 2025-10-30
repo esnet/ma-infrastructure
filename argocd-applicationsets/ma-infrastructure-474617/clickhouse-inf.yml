@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: ch-inf
+  name: ch-envoy-inf
   namespace: ma-infrastructure-474617
 spec:
   generators:
@@ -20,7 +20,62 @@ spec:
                 - "clickhouse"
   template:
     metadata:
-      name: "{{ metadata.labels.environment }}-ch-inf"
+      name: "{{ metadata.labels.environment }}-envoy-ch-inf"
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      ignoreDifferences:
+        - group: apiextensions.k8s.io
+          kind: CustomResourceDefinition
+          name: gatewayclasses.gateway.networking.k8s.io
+          managedFieldsManagers:
+            - gateway-controller
+            - kube-controller-manager
+      project: "{{metadata.labels.project}}"
+      sources:
+        - repoURL: docker.io
+          chart: envoyproxy/gateway-helm
+          targetRevision: v1.5.4
+          helm:
+            releaseName: envoy-gateway
+      destination:
+        server: "{{server}}"
+        namespace: envoy-gateway-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
+          - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ch-tls-inf
+  namespace: ma-infrastructure-474617
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+                - "otel"
+            - key: environment
+              operator: Exists
+            - key: app_name
+              operator: In
+              values:
+                - "clickhouse"
+  template:
+    metadata:
+      name: "{{ metadata.labels.environment }}-tls-ch-inf"
+      annotations:
+        argocd.argoproj.io/sync-wave: "10"
     spec:
       ignoreDifferences:
         - group: apiextensions.k8s.io
@@ -34,32 +89,30 @@ spec:
         - repoURL: https://github.com/esnet/ma-infrastructure.git
           targetRevision: main
           ref: values
-        # Create all required namespaces
-        - repoURL: https://github.com/esnet/ma-infrastructure.git
-          targetRevision: main
-          path: manifest/clickhouse
-        # Adding envoy proxy...
 
-        # Previous version
-        - repoURL: docker.io
-          chart: envoyproxy/gateway-helm
-          targetRevision: v1.5.4
-          helm:
-            releaseName: envoy-gateway
         # Setting Up TLS
         - repoURL: https://raw.githubusercontent.com/esnet/ma-helm-charts/main/
-          targetRevision: 0.1.4
+          targetRevision: 0.1.8
           chart: gateway-tls
           helm:
             valueFiles:
               - $values/argocd-values/ma-infrastructure-474617/clickhouse/{{ metadata.labels.environment }}/ch_tls_values.yml
       destination:
         server: "{{server}}"
-        namespace: envoy-gateway-system
+        namespace: clickhouse
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
-          - ServerSideApply=true
+          # - ServerSideApply=true
+          - Replace=true
           - RespectIgnoreDifferences=true
+          - CreateNamespace=true
+          - SkipDryRunOnMissingResource=true
+        retry: # Add this entire section
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
