@@ -36,6 +36,12 @@ spec:
           targetRevision: main
           path: manifest/clickhouse
         # Adding envoy proxy...
+        # - repoURL: oci://docker.io/envoyproxy
+        #   chart: gateway-helm
+        #   targetRevision: v1.5.4
+        #   helm:
+        #     releaseName: envoy-gateway
+        # Previous version
         - repoURL: docker.io
           chart: envoyproxy/gateway-helm
           targetRevision: v1.5.4

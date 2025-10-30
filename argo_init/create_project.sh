@@ -36,3 +36,7 @@ if [ "$project_exists" = false ]; then
   kubectl -n argocd rollout restart deployment argocd-repo-server
   kubectl -n argocd rollout restart statefulset argocd-application-controller
 fi
+echo "kubectl edit deployment -n argocd argocd-applicationset-controller and update the following lines with the new namespace:"
+echo "args:"
+echo " - --applicationset-namespaces=argocd,ma-infrastructure-474617,stardust-development-464714"
+echo " - --allowed-scm-providers=https://github.com,https://gitlab.com"
