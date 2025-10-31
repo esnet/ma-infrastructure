@@ -20,8 +20,6 @@ spec:
         - repoURL: https://github.com/esnet/ma-infrastructure.git
           targetRevision: main
           path: kustomize/bootstrap/overlays/{{metadata.labels.project}}
-          kustomize:
-            buildOptions: "--enable-helm --load-restrictor=LoadRestrictionsNone"
 
       destination:
         server: "{{server}}"

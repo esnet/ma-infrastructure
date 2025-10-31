@@ -69,3 +69,4 @@ subjects:
   name: argocd-applicationset-controller
   namespace: argocd
 EOF
+kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data":{"kustomize.buildOptions":"--enable-helm --load-restrictor=LoadRestrictionsNone"}}'

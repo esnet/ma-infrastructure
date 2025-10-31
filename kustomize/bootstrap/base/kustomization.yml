@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - namespace.yml
-  - deployment.yml
   - https://raw.githubusercontent.com/external-secrets/external-secrets/refs/tags/v0.20.4/deploy/crds/bundle.yaml
 
 helmCharts:
@@ -18,12 +17,15 @@ helmCharts:
     version: 2.17.7
     releaseName: sealed-secrets
     namespace: sealed-secrets
+    valuesInline:
+      namespace: "sealed-secrets"
   - name: external-secrets
     repo: https://charts.external-secrets.io
     version: v0.20.4
     releaseName: external-secrets
     namespace: external-secrets
     valuesFile: ./value_files/external-secrets.yml
+
   # - name: prometheus-stack
   #   repo: https://prometheus-community.github.io/helm-charts
   #   version: 79.0.0
