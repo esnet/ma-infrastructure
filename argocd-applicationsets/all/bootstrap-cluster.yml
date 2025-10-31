@@ -70,7 +70,7 @@ spec:
 
       destination:
         server: "{{server}}"
-        namespace: cert-manager
+        namespace: core
       syncPolicy:
         automated:
           prune: true

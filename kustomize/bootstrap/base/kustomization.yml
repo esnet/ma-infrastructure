@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yml
+  - deployment.yml
+  - https://raw.githubusercontent.com/external-secrets/external-secrets/refs/tags/v0.20.4/deploy/crds/bundle.yaml
+
+helmCharts:
+  - name: cert-manager
+    repo: https://charts.jetstack.io
+    version: v1.19.1
+    releaseName: cert-manager
+    namespace: cert-manager
+    valuesFile: ./value_files/cert_manager.yml
+  - name: sealed-secrets
+    repo: https://bitnami-labs.github.io/sealed-secrets
+    version: 2.17.7
+    releaseName: sealed-secrets
+    namespace: sealed-secrets
+  - name: external-secrets
+    repo: https://charts.external-secrets.io
+    version: v0.20.4
+    releaseName: external-secrets
+    namespace: external-secrets
+    valuesFile: ./value_files/external-secrets.yml
+  # - name: prometheus-stack
+  #   repo: https://prometheus-community.github.io/helm-charts
+  #   version: 79.0.0
+  #   releaseName: prometheus-stack
+  #   namespace: monitoring
+  #   valuesFile: ./value_files/prometheus.yml
+  # - name: otel
+  #   repo: https://open-telemetry.github.io/opentelemetry-helm-charts
+  #   version: 0.138.0
+  #   releaseName: collector
+  #   namespace: monitoring
+  #   valuesFile: ./value_files/otel.yml

@@ -11,3 +11,6 @@ config:
     replicasCount: 2
   domains:
     - ch.gc1.mgt.stardust.es.net
+  gsm:
+    enabled: true
+    project_id: ma-infrastructure-474617

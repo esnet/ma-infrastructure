@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: initk
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            bootstrap: "true"
+            version: "1.1"
+  template:
+    metadata:
+      name: "{{name}}-initk"
+    spec:
+      project: "{{metadata.labels.project}}"
+      sources:
+        # Create all required namespaces
+        - repoURL: https://github.com/esnet/ma-infrastructure.git
+          targetRevision: main
+          path: kustomize/bootstrap/overlays/{{metadata.labels.project}}
+          kustomize:
+            buildOptions: "--enable-helm --load-restrictor=LoadRestrictionsNone"
+
+      destination:
+        server: "{{server}}"
+        namespace: core
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true

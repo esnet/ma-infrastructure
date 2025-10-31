@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base/namespace.yml
+  - ../../base/deployment.yml
+  - https://raw.githubusercontent.com/external-secrets/external-secrets/refs/tags/v0.20.4/deploy/crds/bundle.yaml
+
+helmCharts:
+  - name: external-secrets
+    repo: https://charts.external-secrets.io
+    version: v0.20.4
+    releaseName: external-secrets
+    namespace: external-secrets
+    valuesFile: ./value_files/external-secrets-override.yml
